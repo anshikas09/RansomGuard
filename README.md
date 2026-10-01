@@ -95,7 +95,7 @@ Controlled Simulation Lab / Monitored Filesystem
 
 * **Behavioral Filesystem Monitoring:** Ingests live filesystem operations without relying on pre-existing malware signatures.
 * **Temporal LSTM Sequence Classifier:** Evaluates rolling windows of 10 consecutive events using PyTorch-trained neural networks.
-* **Low-Latency ONNX Runtime Inference:** Deploys models in optimized ONNX format for microsecond-scale scoring without PyTorch runtime overhead.
+* **Low-Latency ONNX Runtime Inference:** Deploys models in optimized ONNX format for low-latency inference without PyTorch runtime overhead.
 * **Separated Multi-Layer Risk Architecture:** Distinctly reports ML Probability, Heuristic Behavioral Score, and Composite Threat Score to provide transparent, explainable SOC telemetry.
 * **Attack Episode Incident Deduplication:** Prevents SOC alert fatigue by consolidating rapid bursts of suspicious telemetry into a single logical incident.
 * **Safe Automated Containment:** Enacts immediate simulated process termination, network quarantine isolation, and file quarantine within the laboratory workspace.
@@ -112,48 +112,48 @@ Controlled Simulation Lab / Monitored Filesystem
 
 ```mermaid
 flowchart TD
-    subgraph Lab [Controlled Lab Environment]
-        Sim[Simulation Lab UI] -->|Safe Operations| Sandbox[scratch/ransim_lab]
-        Agent[Watchdog Endpoint Agent] -->|File Events| Sandbox
+    subgraph Lab ["Controlled Lab Environment"]
+        Sim["Simulation Lab UI"] -->|"Safe Operations"| Sandbox["Sandbox (scratch/ransim_lab)"]
+        Agent["Watchdog Endpoint Agent"] -->|"File Events"| Sandbox
     end
 
-    subgraph Ingestion [FastAPI Ingestion Gateway]
-        Agent -->|Batch Telemetry| TelemAPI[/api/v1/telemetry]
-        Sim -->|Simulation Events| TelemAPI
+    subgraph Ingestion ["FastAPI Ingestion Gateway"]
+        Agent -->|"Batch Telemetry"| TelemAPI["Telemetry API (/api/v1/telemetry)"]
+        Sim -->|"Simulation Events"| TelemAPI
     end
 
-    subgraph Pipeline [Detection & Decision Pipeline]
-        TelemAPI --> FE[Feature Extractor\n8 Features]
-        FE --> Buffer[Rolling Sequence Buffer\nShape: 10 x 8]
-        Buffer --> ONNX[ONNX LSTM Runner\nransomware_detector.onnx]
-        ONNX --> MLScore[ML Probability: 0.0 - 1.0]
+    subgraph Pipeline ["Detection & Decision Pipeline"]
+        TelemAPI --> FE["Feature Extractor (8 Features)"]
+        FE --> Buffer["Rolling Sequence Buffer (10 x 8)"]
+        Buffer --> ONNX["ONNX LSTM Runner (ransomware_detector.onnx)"]
+        ONNX --> MLScore["ML Probability (0.0 - 1.0)"]
 
-        TelemAPI --> Heuristics[Behavioral Analyzer\nEntropy, Velocity, Extensions]
-        Heuristics --> BehavScore[Behavioral Score: 0 - 100%]
+        TelemAPI --> Heuristics["Behavioral Analyzer (Entropy, Velocity, Extensions)"]
+        Heuristics --> BehavScore["Behavioral Score (0 - 100%)"]
 
-        MLScore --> RiskEngine[Modular Risk Engine]
+        MLScore --> RiskEngine["Modular Risk Engine"]
         BehavScore --> RiskEngine
 
-        RiskEngine --> CompositeScore[Composite Threat Score\n0 - 100%]
-        CompositeScore --> Decision{Threat Score\nThreshold?}
+        RiskEngine --> CompositeScore["Composite Threat Score (0 - 100%)"]
+        CompositeScore --> Decision{"Threat Score Threshold?"}
 
-        Decision -->|< 80%| Monitor[Log & Monitor]
-        Decision -->|>= 80%| Incident[Create / Deduplicate Incident]
-        Decision -->|>= 90%| Containment[Execute Safe Auto-Containment]
+        Decision -->|"< 80%"| Monitor["Log & Monitor"]
+        Decision -->|">= 80%"| Incident["Create & Deduplicate Incident"]
+        Decision -->|">= 90%"| Containment["Execute Safe Auto-Containment"]
     end
 
-    subgraph Persistence [Data & Security Layer]
-        Monitor --> DB[(SQLite / PostgreSQL)]
+    subgraph Persistence ["Data & Security Layer"]
+        Monitor --> DB[("Database (SQLite / PostgreSQL)")]
         Incident --> DB
         Containment --> DB
-        DB --> Audit[Audit Logs]
+        DB --> Audit["Audit Logs"]
     end
 
-    subgraph SOC [SOC Analyst Experience]
-        DB --> WSManager[WebSocket Manager]
-        WSManager -->|Live Telemetry & Alerts| WSStream[ws://host/ws]
-        WSStream --> Dashboard[React SOC Command Center]
-        Dashboard --> Copilot[Analyst Copilot Chatbot]
+    subgraph SOC ["SOC Analyst Experience"]
+        DB --> WSManager["WebSocket Manager"]
+        WSManager -->|"Live Telemetry & Alerts"| WSStream["WebSocket Stream (ws://host/ws)"]
+        WSStream --> Dashboard["React SOC Command Center"]
+        Dashboard --> Copilot["Analyst Copilot Chatbot"]
     end
 ```
 
@@ -185,7 +185,7 @@ $$H(X) = -\sum_{i=1}^{n} P(x_i) \log_2 P(x_i)$$
 Individual operations are assembled into temporal sequences of shape $(N, 10, 8)$, where $10$ represents the rolling history of consecutive filesystem events on that endpoint. If fewer than 10 events have occurred, the sequence is left-padded with zero-vectors. Features are normalized using `StandardScaler` fitted during pipeline training.
 
 ### Step 4 — LSTM Sequence Model
-The neural network architecture is defined in [`ml_pipeline/train.py`](backend/../ml_pipeline/train.py):
+The neural network architecture is defined in [`ml_pipeline/train.py`](ml_pipeline/train.py):
 * **Input Layer:** Shape `(batch_size, 10, 8)`
 * **LSTM Backbone:** 2 stacked LSTM layers, `hidden_size = 128`, `batch_first = True`, `dropout = 0.3`
 * **Dense Layer 1:** Fully connected layer (`128` $\rightarrow$ `64`) with ReLU activation and `Dropout(0.3)`
@@ -313,16 +313,16 @@ The Simulation Lab allows security analysts and students to safely observe ranso
 │ Process Name     │ rapid_worker    │ rapid_worker     │ ransim_combined     │
 │ High Entropy?    │ No (Normal)     │ No (Normal)      │ Yes (> 7.5 Shannon) │
 │ Extension Alter? │ No (.docx)      │ No (.docx)       │ Yes (.encrypted)    │
-│ ML Probability   │ 0.0%            │ ~8.2%            │ 100.0%              │
-│ Behavioral Score │ 0.0%            │ 15.0%            │ 100.0%              │
-│ Final Threat     │ 0.0% (LOW)      │ 10.0% (LOW)      │ 100.0% (CRITICAL)   │
+│ ML Probability   │ ~0%             │ ~0%              │ 100%                │
+│ Behavioral Score │ 0%              │ ~15%             │ 100%                │
+│ Final Threat     │ 0% (LOW)        │ ~10% (LOW)       │ 100% (CRITICAL)     │
 │ Incidents Made   │ 0               │ 0                │ 1 (Deduplicated)    │
 │ Containment?     │ None (MONITOR)  │ None (MONITOR)   │ Auto-Contained      │
 └──────────────────┴─────────────────┴──────────────────┴─────────────────────┘
 ```
 
 * **Test A (Benign Burst):** Simulates routine text editing across 10 files. Correctly classified as normal; no alerts or containment.
-* **Test B (High-Speed Benign Modification):** Simulates a high-velocity script editing 50 files at 30 ops/sec without encryption or extension modifications. The behavioral velocity heuristic registers slight activity (~15%), but composite threat remains low (~10%); no incidents triggered.
+* **Test B (High-Speed Benign Modification):** Simulates a high-velocity script editing 50 files at 30 ops/sec without encryption or extension modifications. The ML probability remains ~0%, the behavioral velocity heuristic registers slight activity (~15%), and the final composite threat remains low (~10%); no incidents are triggered and no containment is executed.
 * **Test C (Combined Ransomware Pattern):** Simulates full ransomware behavior across 50 files at 20 ops/sec, pairing rapid modifications with high Shannon entropy payloads and `.encrypted` extension renaming. Triggers 100% ML and behavioral scores, creates **one logical incident**, terminates the simulation process, and isolates the host.
 
 ---
@@ -549,10 +549,11 @@ ransomguard/
 
 ### Windows One-Command Startup (Recommended)
 
-To start the complete application with automated environment preparation:
+Clone the repository and launch the platform:
 
 ```powershell
-cd E:\ransomguard\frontend
+git clone https://github.com/anshikas09/RansomGuard.git
+cd RansomGuard\frontend
 npm start
 ```
 
@@ -642,13 +643,13 @@ RansomGuard features an automated test suite verifying backend API endpoints, RB
 
 ### Running Backend Tests
 ```powershell
-.venv\Scripts\python.exe -m pytest backend/tests
+pytest backend/tests
 ```
 
 ```text
 ============================= test session starts =============================
 platform win32 -- Python 3.12.5, pytest-9.1.1, pluggy-1.6.0
-rootdir: E:\ransomguard
+rootdir: RansomGuard
 collected 15 items
 
 backend\tests\test_api.py ............                                   [ 80%]
@@ -698,7 +699,7 @@ Follow this step-by-step walkthrough to demonstrate RansomGuard during technical
 2. Set **Target File Count:** `50`.
 3. Set **Modification Rate:** `30 ops/sec`.
 4. Click **Run Simulation**.
-5. **Observation:** Velocity increases to 30 ops/sec. Behavioral heuristics register slight activity ($\approx 15\%$), but because entropy and extension signals remain benign, the Threat Score stays low ($\approx 10\%$). Detection status remains **NORMAL**; no incidents are triggered.
+5. **Observation:** Velocity increases to 30 ops/sec. ML probability remains ~0%. Behavioral heuristics register slight activity ($\approx 15\%$), and the final composite threat remains low ($\approx 10\%$). Detection status remains **NORMAL**, containment remains **MONITORING**, and no incidents are triggered.
 
 ### Step 5: Execute Test C (Ransomware Attack & Auto-Containment)
 1. Select **Combined (Entropy + Rapid Mod + Extension Change)**.
@@ -720,17 +721,19 @@ Follow this step-by-step walkthrough to demonstrate RansomGuard during technical
 
 ---
 
-## 25. Screenshots Directory
+## 25. Screenshots Directory (Placeholders)
 
-Visual assets demonstrating the platform are documented in [`docs/screenshots/`](docs/screenshots/):
+UI screenshot captures can be stored inside [`docs/screenshots/`](docs/screenshots/) to provide visual previews on GitHub. 
 
-| View | Target Path | Description |
+*(Note: Live image files are currently placeholders to maintain a lightweight repository clone size. Capture your own test runs using the standard demonstration paths below):*
+
+| View | Target Placeholder Path | Planned Demonstration Capture |
 | :--- | :--- | :--- |
-| **SOC Dashboard** | `docs/screenshots/dashboard.png` | Live command center with telemetry charts and incident feed |
-| **Simulation Lab** | `docs/screenshots/simulation_lab.png` | Interactive workbench executing Test C ransomware simulation |
-| **Incident Detail** | `docs/screenshots/incident_detail.png` | Forensic triage view with signal timeline and response actions |
-| **Endpoints Fleet** | `docs/screenshots/endpoints.png` | Multi-host inventory with isolation toggles |
-| **Model Center** | `docs/screenshots/model_center.png` | ONNX architecture parameters and confusion matrix |
+| **SOC Dashboard** | `docs/screenshots/dashboard.png` *(placeholder)* | Live command center with telemetry charts and incident feed |
+| **Simulation Lab** | `docs/screenshots/simulation_lab.png` *(placeholder)* | Interactive workbench executing Test C ransomware simulation |
+| **Incident Detail** | `docs/screenshots/incident_detail.png` *(placeholder)* | Forensic triage view with signal timeline and response actions |
+| **Endpoints Fleet** | `docs/screenshots/endpoints.png` *(placeholder)* | Multi-host inventory with isolation toggles |
+| **Model Center** | `docs/screenshots/model_center.png` *(placeholder)* | ONNX architecture parameters and confusion matrix |
 
 ---
 

@@ -1,0 +1,28 @@
+# RansomGuard Endpoint Agent Configuration
+agent:
+  hostname: "demo-endpoint-vm01"
+  version: "1.0.0"
+  os: "Windows 11 Security Lab"
+
+backend:
+  url: "http://localhost:8000"
+  telemetry_interval: 5
+  heartbeat_interval: 30
+
+monitoring:
+  target_directory: "./scratch/ransim_lab"
+  max_buffer_size: 10
+
+containment:
+  enabled: true
+  auto_isolate: true
+  auto_kill: true
+  alert_threshold: 0.80
+  containment_threshold: 0.90
+  whitelist_processes:
+    - "chrome.exe"
+    - "word.exe"
+    - "excel.exe"
+    - "explorer.exe"
+    - "code.exe"
+    - "python.exe"

@@ -1,0 +1,85 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+*.whl
+
+# Virtual Environments & Secrets
+venv/
+.venv/
+env/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+
+# Machine Learning Artifacts
+# PyTorch checkpoints and raw weights are excluded; deployed ONNX model and scaler are tracked for reproducible execution
+*.pt
+*.pth
+!models/ransomware_detector.onnx
+!models/scaler.pkl
+!models/.gitkeep
+
+# Training Data
+data/generated/
+data/train/
+data/test/
+*.jsonl
+
+# IDE & Editor Artifacts
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node & React Frontend
+node_modules/
+frontend/node_modules/
+frontend/build/
+frontend/.env
+frontend/.env.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database & Runtime State
+*.db
+*.sqlite
+*.sqlite3
+ransomguard.db
+backend/ransomguard.db
+
+# Logs & Docker
+*.log
+
+# Coverage & Testing
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.pytest_cache/
+
+# Scratch & Simulation Lab Workspace
+scratch/
+ransim_lab/

@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_DB: ransomguard
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ransomguard123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD:-ransomguard123}@postgres:5432/ransomguard
+      JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-key-change-in-production-2026}
+      JWT_EXPIRATION_MINUTES: 1440
+      MODEL_PATH: /app/models/ransomware_detector.onnx
+      SIMULATION_DIRECTORY: /app/scratch/ransim_lab
+      LOG_LEVEL: INFO
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    volumes:
+      - ./backend:/app
+      - ./models:/app/models
+      - ./scratch:/app/scratch
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      REACT_APP_API_URL: http://localhost:8000
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    command: npm start
+
+volumes:
+  postgres_data:
